@@ -92,17 +92,19 @@ struct Geocode : Codable {
         
         let task = URLSession.shared.dataTask(with: url) {
             (optionalData, _, optionalError) in
-            guard let data = optionalData else {
-                callback(.failure(.Network(optionalError)))
-                return
-            }
-            do {
-                let decoder = JSONDecoder()
-                let geocode = try decoder.decode(Geocode.self, from: data)
-                callback(.success(geocode))
-            } catch {
-                callback(.failure(.BadJSON(error)))
-                return
+            DispatchQueue.main.async {
+                guard let data = optionalData else {
+                    callback(.failure(.Network(optionalError)))
+                    return
+                }
+                do {
+                    let decoder = JSONDecoder()
+                    let geocode = try decoder.decode(Geocode.self, from: data)
+                    callback(.success(geocode))
+                } catch {
+                    callback(.failure(.BadJSON(error)))
+                    return
+                }                
             }
         }
         task.resume()

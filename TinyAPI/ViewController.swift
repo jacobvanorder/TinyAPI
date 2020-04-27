@@ -9,24 +9,46 @@
 import UIKit
 
 class ViewController: UIViewController {
-
-    private func fetchGeocode(lat: Double,
-                              long: Double,
-                              callback: @escaping (Result<Geocode, Geocode.GeocodeError>) -> Void) {
-        Geocode.fetch(lat: lat, long: long) {
-            [weak self]
-            (result) in
-            switch result {
-            case .success(let geocode):
-                self?.handle(geocode: geocode)
-            case .failure(let error):
-                self?.handle(geocodeError: error)
-            }
+    
+    @IBOutlet var latitudeTextField: UITextField!
+    @IBOutlet var longitudeTextField: UITextField!
+    @IBOutlet var streetResultLabel: UILabel!
+    @IBOutlet var cityResultLabel: UILabel!
+    @IBOutlet var stateResultLabel: UILabel!
+    @IBOutlet var zipResult: UILabel!
+    
+    @IBOutlet var fetchButton: UIButton!
+    
+    @IBAction func fetchButtonTapped(_ sender: UIButton) {
+        streetResultLabel.text = .none
+        cityResultLabel.text = .none
+        stateResultLabel.text = .none
+        zipResult.text = .none
+        guard
+            let latText = latitudeTextField.text,
+            let lat = Double(latText),
+            let longText = longitudeTextField.text,
+            let long = Double(longText) else { return }
+        fetchButton.isEnabled = false
+        Geocode.fetch(lat: lat,
+                     long: long) {
+                        [weak self]
+                        (result) in
+                        defer { self?.fetchButton.isEnabled = true }
+                        switch result {
+                        case .success(let geocode):
+                            self?.handle(geocode: geocode)
+                        case .failure(let error):
+                            self?.handle(geocodeError: error)
+                        }
         }
     }
 
     private func handle(geocode: Geocode) {
-        NSLog("\(String(describing: geocode.city))")
+        streetResultLabel.text = "\(geocode.stnumber ?? "") \(geocode.staddress ?? "")"
+        cityResultLabel.text = geocode.city
+        stateResultLabel.text = geocode.state
+        zipResult.text = geocode.postal
     }
     
     private func handle(geocodeError: Geocode.GeocodeError) {
